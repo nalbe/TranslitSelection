@@ -7,6 +7,7 @@
 
 // Standard library headers
 #include <string>
+#include <vector>
 
 // Windows system headers
 #include <Windows.h>
@@ -15,6 +16,43 @@
 
 namespace cst::winapi
 {
+
+	// ====================================================================================
+	//  ClipboardSnapshot - an in-memory copy of every clipboard format.
+	//  Lets us clobber the clipboard (EmptyClipboard + paste translit) and then
+	//  put it back exactly as it was, including non-text formats such as
+	//  CF_HDROP (files copied in Explorer), images, HTML, etc.
+	// ====================================================================================
+	struct ClipboardSnapshot
+	{
+		struct Format
+		{
+			UINT       format = 0;
+			HGLOBAL    hMem   = nullptr;
+
+			Format() = default;
+			Format(const Format&) = delete;
+			Format(Format&& o) noexcept : format(o.format), hMem(o.hMem) { o.hMem = nullptr; }
+			Format& operator=(Format&& o) noexcept
+			{
+				if (this != &o) { release(); format = o.format; hMem = o.hMem; o.hMem = nullptr; }
+				return *this;
+			}
+			~Format() { release(); }
+
+			void release() { if (hMem) { ::GlobalFree(hMem); hMem = nullptr; } }
+		};
+
+		std::vector<Format> formats;
+
+		ClipboardSnapshot() = default;
+		ClipboardSnapshot(const ClipboardSnapshot&) = delete;
+		ClipboardSnapshot(ClipboardSnapshot&&) = default;
+		ClipboardSnapshot& operator=(ClipboardSnapshot&&) = default;
+
+		bool empty() const noexcept { return formats.empty(); }
+		void clear() noexcept { formats.clear(); }
+	};
 
 	// ====================================================================================
 	//  ClipboardManager - manages the clipboard data
@@ -233,6 +271,111 @@ namespace cst::winapi
 				return true;
 			}
 			return false;
+		}
+
+		// Makes a deep copy of every format currently on the clipboard, so the
+		// clipboard can be emptied and later restored with RestoreAll().
+		static ClipboardSnapshot CaptureAll()
+		{
+			ClipboardSnapshot snap;
+			if (!TryOpen()) {
+				return snap;
+			}
+
+			UINT format = 0;
+			while ((format = ::EnumClipboardFormats(format)) != 0) {
+				HGLOBAL hData = ::GetClipboardData(format);
+				if (!hData) {
+					continue;
+				}
+
+				SIZE_T size = ::GlobalSize(hData);
+				if (size == 0) {
+					continue;
+				}
+
+				const void* pSrc = ::GlobalLock(hData);
+				if (!pSrc) {
+					continue;
+				}
+
+				HGLOBAL hCopy = ::GlobalAlloc(GMEM_MOVEABLE, size);
+				if (hCopy) {
+					void* pDst = ::GlobalLock(hCopy);
+					if (pDst) {
+						::memcpy(pDst, pSrc, size);
+						::GlobalUnlock(hCopy);
+
+						ClipboardSnapshot::Format f;
+						f.format = format;
+						f.hMem   = hCopy;
+						snap.formats.push_back(std::move(f));
+					}
+					else {
+						::GlobalFree(hCopy);
+					}
+				}
+
+				::GlobalUnlock(hData);
+			}
+
+			CloseClipboard();
+			return snap;
+		}
+
+		// Empties the clipboard and re-places every format captured by CaptureAll().
+		static bool RestoreAll(const ClipboardSnapshot& snap)
+		{
+			if (!TryOpen()) {
+				return false;
+			}
+
+			if (!::EmptyClipboard()) {
+				m_errors.emplace_back(
+					FormattedRecord{ ErrorLevel::Error, "" }, ::GetLastError()
+				);
+				CloseClipboard();
+				return false;
+			}
+
+			for (auto const& f : snap.formats) {
+				if (!f.hMem) {
+					continue;
+				}
+
+				SIZE_T size = ::GlobalSize(f.hMem);
+				HGLOBAL hCopy = ::GlobalAlloc(GMEM_MOVEABLE, size);
+				if (!hCopy) {
+					continue;
+				}
+
+				void* pDst = ::GlobalLock(hCopy);
+				if (!pDst) {
+					::GlobalFree(hCopy);
+					continue;
+				}
+
+				const void* pSrc = ::GlobalLock(f.hMem);
+				if (!pSrc) {
+					::GlobalUnlock(hCopy);
+					::GlobalFree(hCopy);
+					continue;
+				}
+
+				::memcpy(pDst, pSrc, size);
+				::GlobalUnlock(hCopy);
+				::GlobalUnlock(f.hMem);
+
+				if (!::SetClipboardData(f.format, hCopy)) {
+					m_errors.emplace_back(
+						FormattedRecord{ ErrorLevel::Error, "" }, ::GetLastError()
+					);
+					::GlobalFree(hCopy);
+				}
+			}
+
+			CloseClipboard();
+			return true;
 		}
 
 		static bool ClearClipboardData() noexcept

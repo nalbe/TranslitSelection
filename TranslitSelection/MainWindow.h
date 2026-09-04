@@ -1,4 +1,4 @@
-// MainWindow.h - TranslitSelection tray-only layout fixer
+﻿// MainWindow.h - TranslitSelection tray-only layout fixer
 #pragma once
 
 // Implementation-specific headers
@@ -53,7 +53,7 @@ private:
 	bool m_layoutToggle = false;   // from tray menu checkbox
 	bool m_keepSelection = false;  // re-select pasted text after translate
 
-	std::wstring m_savedClipboard;  // clipboard contents before this operation
+	cst::winapi::ClipboardSnapshot m_savedClipboard;  // clipboard contents before this operation
 
 	HBRUSH m_bgBrush {};
 
@@ -313,9 +313,22 @@ public:
 		// pasting.
 
 		// save whatever was on the clipboard before we stomp it, so we can
-		// put it back after the paste. dropped on the early-return paths
-		// (empty selection / no change) -- nothing to restore there.
-		m_savedClipboard = cst::winapi::ClipboardManager::GetText();
+		// put it back after the paste. a scope guard guarantees the original
+		// clipboard (all formats -- text, CF_HDROP files, images, ...) is
+		// restored on EVERY exit path, not just the happy one.
+		m_savedClipboard = cst::winapi::ClipboardManager::CaptureAll();
+
+		// RAII guard: restore the snapshot (all formats, including file drops)
+		// when we leave this scope, on every exit path.
+		struct RestoreGuard
+		{
+			cst::winapi::ClipboardSnapshot& snap;
+			~RestoreGuard()
+			{
+				cst::winapi::ClipboardManager::RestoreAll(snap);
+			}
+		} restore{ m_savedClipboard };
+		(void)restore;
 
 		clearClipboard();
 		sendCtrlKey('C');
@@ -384,9 +397,8 @@ public:
 			log("fixSelectedText: selection re-highlighted via keyboard");
 		}
 
-		// put the user's original clipboard contents back
-		cst::winapi::ClipboardManager::SetText(m_savedClipboard);
-		log("fixSelectedText: original clipboard restored");
+		// put the user's original clipboard contents back (all formats) -- done
+		// automatically by RestoreGuard at scope exit.
 
 		log("fixSelectedText: DONE");
 	}
