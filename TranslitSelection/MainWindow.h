@@ -33,8 +33,8 @@
 
 // ====================================================================
 //  MainWindow - hidden window (message pump only) + tray icon
-//  Left-click tray  = fix selected text in the previously active window
-//  Right-click tray = popup menu (Exit)
+//  Left-click tray  = no action
+//  Right-click tray = popup menu (variants)
 // ====================================================================
 class MainWindow :
 	public cst::winapi::WindowThemeMixin<MainWindow>,
