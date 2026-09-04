@@ -1,0 +1,18 @@
+# Build output
+x64/
+Debug/
+Release/
+*.obj
+*.pdb
+*.ilk
+*.iobj
+*.ipdb
+*.tlog/
+*.recipe
+
+# Visual Studio
+.vs/
+*.user
+
+# Logs
+*.log
