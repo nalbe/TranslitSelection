@@ -19,10 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="KeyboardHook.hpp" />
     <ClInclude Include="MainWindow.h" />
     <ClInclude Include="LayoutMap.hpp" />
+    <ClInclude Include="Transliterator.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="KeyboardHook.cpp" />
+    <ClCompile Include="Transliterator.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>

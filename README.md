@@ -20,7 +20,7 @@ q<TAB>й<TAB>ku
 - **Empty line** — separator between the header and the data.
 - **Then** — one "key" per line: tab-separated characters that key maps to in each language, in the same order as the first line.
 - Characters are **UTF-8** (a leading BOM is fine — it is stripped).
-- Lines starting with `#` or `;` are comments and are ignored.
+- Lines starting with `#` are comments and are ignored. Any other character — including punctuation like `;`, `.`, `'` — is a valid dictionary key.
 
 ### How the direction is chosen
 
@@ -40,9 +40,26 @@ The selected text was typed in the **active** layout of the window (`from`). It 
 
 ### Other rules
 - Changes take effect **after restarting** the program (the dictionary is read at startup).
-- If the file is missing, broken, or empty — transliteration is disabled and an error is logged.
+- If the file is missing, broken, or empty — transliteration is disabled and an error is written to the log (when running with `--log`).
 - The last successfully loaded table is kept: a failed reload never breaks an already working dictionary.
 - Characters in one row establish a mutual correspondence across all languages at once. Transliteration between any two languages is a single step (O(1)).
+
+## Usage
+
+Select text in any application and press **F8** — the text is transliterated in place using the active keyboard layout.
+
+### Tray menu (right-click)
+
+- **Switch layout after translit** — toggle the system keyboard layout to the next one after transliteration.
+- **Keep selection after translit** — re-select the pasted text so you can see what changed.
+
+### Command-line options
+
+| Flag | Description |
+|------|-------------|
+| `--log` | Enable logging to `translit.log` next to the executable |
+
+Without `--log`, no log file is created and the app runs silently. With it, the log records startup health (which hotkey was registered, whether `layout.txt` loaded) and every transliteration: target window, text read from the clipboard, layout direction, and the resulting text.
 
 ## Examples
 

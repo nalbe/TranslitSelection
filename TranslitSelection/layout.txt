@@ -1,6 +1,6 @@
 ﻿# TranslitSelection layout dictionary.
 #
-# Format (blank lines and lines starting with # or ; are ignored):
+#   Format (blank lines and lines starting with # are ignored):
 #   First content line : column headers = language names, tab-separated.
 #                        At least 2 columns. Example: En<TAB>Ru<TAB>Fr
 #   Following rows     : one physical key per line, tab-separated characters
@@ -9,7 +9,7 @@
 #   Example:  .<TAB>ю<TAB>clé      (key maps across all columns at once)
 #
 # Rules:
-#   - Lines starting with '#' or ';' are comments and are ignored.
+#   - Lines starting with '#' are comments and are ignored.
 #   - A row with a wrong number of columns is silently skipped.
 #   - UTF-8 encoding (a leading BOM is fine).
 #   - Changes take effect after restarting the program.
@@ -91,3 +91,4 @@ Z	Я
 _	_
 =	=
 +	+
+&	?

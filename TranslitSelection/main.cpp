@@ -16,7 +16,8 @@ int WINAPI wWinMain(
 	cst::winapi::SingleInstanceGuard exists{ MainWindow::ClassName };
 	if (exists) { return 0; }
 
-	return MainWindow{}.loop();
+	bool enableLogging = (pCmdLine && wcsstr(pCmdLine, L"--log"));
+	return MainWindow{ enableLogging }.loop();
 }
 
 

@@ -100,7 +100,7 @@ namespace kf
 					(unsigned char)line[2] == 0xBF) {
 					line.erase(0, 3);
 				}
-				if (line.empty() || line[0] == '#' || line[0] == ';') continue;
+				if (line.empty() || line[0] == '#') continue;
 				lines.push_back(line);
 			}
 			if (lines.size() < 1) return false;
@@ -129,16 +129,8 @@ namespace kf
 			s_languages = std::move(langs);
 			s_rows = std::move(rows);
 			rebuildIndex();
-			s_loaded = true;
 			return true;
 		}
-
-		static bool warmup(const std::wstring& path)
-		{
-			return load(path);
-		}
-
-		static bool loaded() { return s_loaded; }
 
 	private:
 		static std::vector<std::wstring> splitTabs(const std::string& s)
@@ -203,13 +195,11 @@ namespace kf
 		static std::vector<std::wstring> s_languages;   // column headers (names)
 		static std::vector<std::vector<wchar_t>> s_rows; // each row: char per column
 		static std::vector<std::unordered_map<wchar_t, int>> s_index; // per column: char -> row
-		static bool s_loaded;
 	};
 
 	// out-of-class definitions
-	std::vector<std::wstring> LayoutMap::s_languages;
-	std::vector<std::vector<wchar_t>> LayoutMap::s_rows;
-	std::vector<std::unordered_map<wchar_t, int>> LayoutMap::s_index;
-	bool LayoutMap::s_loaded = false;
+	inline std::vector<std::wstring> LayoutMap::s_languages;
+	inline std::vector<std::vector<wchar_t>> LayoutMap::s_rows;
+	inline std::vector<std::unordered_map<wchar_t, int>> LayoutMap::s_index;
 
 }  // namespace kf
