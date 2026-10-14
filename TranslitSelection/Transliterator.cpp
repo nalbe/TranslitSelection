@@ -29,14 +29,14 @@ namespace
 		seq.reserve(2 + 2 * static_cast<size_t>(repeat));
 
 		if (ctrl)  seq.push_back(stroke(VK_CONTROL, false));
-		if (shift) seq.push_back(stroke(VK_SHIFT,   false));
+		if (shift) seq.push_back(stroke(VK_RSHIFT,  false));
 
 		for (int i = 0; i < repeat; ++i) {
 			seq.push_back(stroke(key, false));
 			seq.push_back(stroke(key, true));
 		}
 
-		if (shift) seq.push_back(stroke(VK_SHIFT,   true));
+		if (shift) seq.push_back(stroke(VK_RSHIFT,  true));
 		if (ctrl)  seq.push_back(stroke(VK_CONTROL, true));
 
 		::SendInput(static_cast<UINT>(seq.size()), seq.data(), sizeof(INPUT));
