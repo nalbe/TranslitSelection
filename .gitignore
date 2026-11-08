@@ -16,3 +16,6 @@ Release/
 
 # Logs
 *.log
+
+# Release artifacts (publish via GitHub Releases instead)
+*-x64.zip
