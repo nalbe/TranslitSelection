@@ -55,7 +55,16 @@ LRESULT CALLBACK KeyboardHook::lowLevelProc(int nCode, WPARAM wParam, LPARAM lPa
 	}
 
 	const auto* info = reinterpret_cast<const KBDLLHOOKSTRUCT*>(lParam);
-	if (!info || !g_context || !g_context->filter(static_cast<BYTE>(info->vkCode))) {
+	if (!info || !g_context) {
+		return ::CallNextHookEx(nullptr, nCode, wParam, lParam);
+	}
+
+	// our own SendInput chords are never hotkeys
+	if (info->flags & LLKHF_INJECTED) {
+		return ::CallNextHookEx(nullptr, nCode, wParam, lParam);
+	}
+
+	if (!g_context->filter(static_cast<BYTE>(info->vkCode))) {
 		return ::CallNextHookEx(nullptr, nCode, wParam, lParam);
 	}
 

@@ -20,7 +20,7 @@ q<TAB>й<TAB>ku
 - **Empty line** — separator between the header and the data.
 - **Then** — one "key" per line: tab-separated characters that key maps to in each language, in the same order as the first line.
 - Characters are **UTF-8** (a leading BOM is fine — it is stripped).
-- Lines starting with `#` are comments and are ignored. Any other character — including punctuation like `;`, `.`, `'` — is a valid dictionary key.
+- Lines starting with `//` are comments and are ignored. Any other character — including punctuation like `#`, `;`, `.`, `'` — is a valid dictionary key.
 
 ### How the direction is chosen
 

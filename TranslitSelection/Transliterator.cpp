@@ -10,6 +10,23 @@
 
 namespace
 {
+	// the E0-prefixed keys. without KEYEVENTF_EXTENDEDKEY their scan code
+	// reaches the app as the numpad twin and obeys NumLock (Left -> 4).
+	bool isExtendedKey(WORD vk)
+	{
+		switch (vk) {
+		case VK_INSERT:  case VK_DELETE: case VK_HOME:  case VK_END:
+		case VK_PRIOR:   case VK_NEXT:   case VK_LEFT:  case VK_UP:
+		case VK_RIGHT:   case VK_DOWN:
+		case VK_DIVIDE:  case VK_NUMLOCK:
+		case VK_RCONTROL: case VK_RMENU:
+		case VK_LWIN:    case VK_RWIN:   case VK_APPS:
+			return true;
+		default:
+			return false;
+		}
+	}
+
 	// Scancodes, not bare virtual keys: some toolkits (Gecko) drop injections
 	// that carry no scancode. Every keystroke we send - a bare key, a Ctrl
 	// chord, Shift+Left N times - is this one call.
@@ -19,9 +36,11 @@ namespace
 		{
 			INPUT in {};
 			in.type       = INPUT_KEYBOARD;
-			in.ki.wVk     = vk;
+			in.ki.wVk     = 0;
 			in.ki.wScan   = static_cast<WORD>(::MapVirtualKeyW(vk, MAPVK_VK_TO_VSC));
-			in.ki.dwFlags = KEYEVENTF_SCANCODE | (up ? KEYEVENTF_KEYUP : 0u);
+			in.ki.dwFlags = KEYEVENTF_SCANCODE
+				| (isExtendedKey(vk) ? KEYEVENTF_EXTENDEDKEY : 0u)
+				| (up ? KEYEVENTF_KEYUP : 0u);
 			return in;
 		};
 

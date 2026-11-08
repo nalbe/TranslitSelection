@@ -24,6 +24,7 @@ namespace kf
 	//    line 3+       : one physical key per line, tab-separated characters
 	//                    in the SAME column order as line 1, e.g.
 	//                    .<TAB>ю<TAB>*
+	//    comment       : a line starting with // is ignored
 	//
 	//  Every line establishes a one-to-one mapping between the characters of
 	//  ALL columns at once, so transliteration between any two languages is a
@@ -88,7 +89,7 @@ namespace kf
 			std::ifstream ifs(path, std::ios::binary);
 			if (!ifs) return false;
 
-			// read all lines, strip CR, drop blank/#/; lines
+			// read all lines, strip CR, drop blank and // comment lines
 			std::vector<std::string> lines;
 			std::string line;
 			while (std::getline(ifs, line)) {
@@ -100,7 +101,7 @@ namespace kf
 					(unsigned char)line[2] == 0xBF) {
 					line.erase(0, 3);
 				}
-				if (line.empty() || line[0] == '#') continue;
+				if (line.empty() || line.compare(0, 2, "//") == 0) continue;
 				lines.push_back(line);
 			}
 			if (lines.size() < 1) return false;
